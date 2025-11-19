@@ -98,7 +98,7 @@ const UserBookings = () => {
         </Column>
 
         <Column width={120}>
-          <HeaderCell>Date</HeaderCell>
+          <HeaderCell>Travel Date</HeaderCell>
           {/* assuming travel_date from backend */}
           <Cell>
             {(rowData) =>
@@ -110,7 +110,7 @@ const UserBookings = () => {
         </Column>
 
         <Column width={100}>
-          <HeaderCell>Time</HeaderCell>
+          <HeaderCell>Travel Time</HeaderCell>
           {/* you can use departure_time or arrival_time */}
           <Cell dataKey="departure_time" />
         </Column>

@@ -88,6 +88,11 @@ const UserDashboard = () => {
         )}&to=${encodeURIComponent(to)}`
       );
       const data = await res.json();
+
+      if (Array.isArray(data) && data.length === 0) {
+        notify("info", "No buses found for the selected route.");
+      }
+
       setSearchResults(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
@@ -329,6 +334,11 @@ const UserDashboard = () => {
                     oneTap
                     value={bookingDate}
                     onChange={setBookingDate}
+                    shouldDisableDate={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
                   />
                 </Form.Group>
 

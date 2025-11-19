@@ -1,20 +1,97 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heading, Panel, Form, Input, Button } from "rsuite";
 import Notification from "../components/Notification";
 
 const UserProfile = () => {
   const [formValue, setFormValue] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    contact: "+91-98765-43210",
+    name: "",
+    email: "",
+    contact: "",
   });
 
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    // Here you’d call API
-    setMessage("Profile updated successfully");
-    setTimeout(() => setMessage(""), 3000);
+  // TODO: replace with however you store your token
+  const token = localStorage.getItem("token");
+
+  // Load current user profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("http://localhost:4000/api/users/me", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to load profile");
+        }
+
+        const data = await res.json();
+        setFormValue({
+          name: data.name || "",
+          email: data.email || "",
+          contact: data.phone || "",
+        });
+      } catch (err) {
+        console.error(err);
+        setMessageType("error");
+        setMessage("Failed to load profile");
+      } finally {
+        setLoading(false);
+        setTimeout(() => setMessage(""), 3000);
+      }
+    };
+
+    if (token) {
+      fetchProfile();
+    }
+  }, [token]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const res = await fetch("http://localhost:4000/api/users/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: formValue.name,
+          phone: formValue.contact,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      const data = await res.json();
+
+      // Sync with server response
+      setFormValue({
+        name: data.name || "",
+        email: data.email || "",
+        contact: data.phone || "",
+      });
+
+      setMessageType("success");
+      setMessage("Profile updated successfully");
+    } catch (err) {
+      console.error(err);
+      setMessageType("error");
+      setMessage("Failed to update profile");
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMessage(""), 3000);
+    }
   };
 
   return (
@@ -24,7 +101,12 @@ const UserProfile = () => {
       </Heading>
 
       <Panel bordered shaded>
-        <Form fluid formValue={formValue} onChange={setFormValue}>
+        <Form
+          fluid
+          formValue={formValue}
+          onChange={setFormValue}
+          disabled={loading || saving}
+        >
           <Form.Group controlId="name">
             <Form.ControlLabel>Name</Form.ControlLabel>
             <Form.Control name="name" accepter={Input} />
@@ -32,7 +114,12 @@ const UserProfile = () => {
 
           <Form.Group controlId="email">
             <Form.ControlLabel>Email</Form.ControlLabel>
-            <Form.Control name="email" accepter={Input} type="email" />
+            <Form.Control
+              name="email"
+              accepter={Input}
+              type="email"
+              disabled // email not updated by PUT /me
+            />
           </Form.Group>
 
           <Form.Group controlId="contact">
@@ -40,13 +127,13 @@ const UserProfile = () => {
             <Form.Control name="contact" accepter={Input} />
           </Form.Group>
 
-          <Button appearance="primary" onClick={handleSave}>
+          <Button appearance="primary" onClick={handleSave} loading={saving}>
             Save Changes
           </Button>
         </Form>
       </Panel>
 
-      <Notification show={!!message} type="success" message={message} />
+      <Notification show={!!message} type={messageType} message={message} />
     </>
   );
 };
