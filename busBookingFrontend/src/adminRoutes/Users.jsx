@@ -1,68 +1,52 @@
-import { useState } from "react";
-import { Heading, Table, Button, Modal, Form, Input, DatePicker } from "rsuite";
+import { useEffect, useState } from "react";
+import { Heading, Table } from "rsuite";
 
 const { Column, HeaderCell, Cell } = Table;
 
-const initialUsers = [
-  {
-    id: 1,
-    name: "Amanraj Vanshi",
-    email: "amanraj@gmail.com",
-    contact: "9876543210",
-    joiningDate: "2024-01-10",
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    email: "john@gmail.com",
-    contact: "9988776655",
-    joiningDate: "2024-03-22",
-  },
-];
-
-const emptyUser = {
-  name: "",
-  email: "",
-  contact: "",
-  joiningDate: null,
-};
-
 const Users = () => {
-  const [users, setUsers] = useState(initialUsers);
-  const [open, setOpen] = useState(false);
-  const [formValue, setFormValue] = useState(emptyUser);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleAddOpen = () => {
-    setFormValue(emptyUser);
-    setOpen(true);
-  };
+  // 👉 Call your API: GET /api/users (with auth & isAdmin on backend)
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
 
-  const handleClose = () => setOpen(false);
+        const res = await fetch("http://localhost:4000/api/users", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
 
-  const handleSubmit = () => {
-    if (!formValue.name || !formValue.email) {
-      alert("Please enter name and email");
-      return;
-    }
+        const data = await res.json();
 
-    const newId =
-      users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1;
+        if (!res.ok) {
+          console.error("Failed to load users:", data);
+          return;
+        }
 
-    setUsers((prev) => [
-      ...prev,
-      {
-        id: newId,
-        name: formValue.name,
-        email: formValue.email,
-        contact: formValue.contact,
-        joiningDate: formValue.joiningDate
-          ? formValue.joiningDate.toISOString().slice(0, 10)
-          : "",
-      },
-    ]);
+        // Map API shape → UI shape
+        const mapped = data.map((u) => ({
+          id: u.id,
+          name: u.name || "",
+          email: u.email || "",
+          contact: u.phone || "",
+          joiningDate: u.created_at || null,
+        }));
 
-    setOpen(false);
-  };
+        setUsers(mapped);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   return (
     <>
@@ -76,13 +60,10 @@ const Users = () => {
         }}
       >
         <Heading level={2}>Users</Heading>
-        <Button appearance="primary" onClick={handleAddOpen}>
-          Add User
-        </Button>
       </div>
 
       {/* Table */}
-      <Table height={420} data={users}>
+      <Table height={420} data={users} loading={loading}>
         <Column width={60} align="center" resizable>
           <HeaderCell>Id</HeaderCell>
           <Cell dataKey="id" />
@@ -114,49 +95,6 @@ const Users = () => {
           </Cell>
         </Column>
       </Table>
-
-      {/* Add User Modal */}
-      <Modal open={open} onClose={handleClose}>
-        <Modal.Header>
-          <Modal.Title>Add User</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form fluid formValue={formValue} onChange={setFormValue}>
-            <Form.Group controlId="name">
-              <Form.ControlLabel>Name</Form.ControlLabel>
-              <Form.Control name="name" accepter={Input} />
-            </Form.Group>
-
-            <Form.Group controlId="email">
-              <Form.ControlLabel>Email</Form.ControlLabel>
-              <Form.Control name="email" accepter={Input} type="email" />
-            </Form.Group>
-
-            <Form.Group controlId="contact">
-              <Form.ControlLabel>Contact</Form.ControlLabel>
-              <Form.Control name="contact" accepter={Input} />
-            </Form.Group>
-
-            <Form.Group controlId="joiningDate">
-              <Form.ControlLabel>Joining Date</Form.ControlLabel>
-              <Form.Control
-                name="joiningDate"
-                accepter={DatePicker}
-                oneTap
-                style={{ width: "100%" }}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={handleSubmit} appearance="primary">
-            Add
-          </Button>
-          <Button onClick={handleClose} appearance="subtle">
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </>
   );
 };

@@ -18,8 +18,8 @@ export function up(knex) {
       .inTable("buses")
       .onDelete("CASCADE");
 
-    table.integer("seats").unsigned().notNullable().defaultTo(1);
-    table.date("journey_date").notNullable();
+    table.integer("seats_booked").unsigned().notNullable().defaultTo(1);
+    table.date("travel_date").notNullable();
     table.string("status").notNullable().defaultTo("confirmed");
     table.timestamp("created_at").defaultTo(knex.fn.now());
   });

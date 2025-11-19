@@ -1,44 +1,22 @@
-import { useState } from "react";
+// src/adminRoutes/Busses.jsx
+import { useEffect, useState } from "react";
 import {
   Button,
+  Form,
   Heading,
+  Input,
+  InputGroup,
+  InputNumber,
   Modal,
   Table,
-  Form,
-  Input,
-  InputNumber,
 } from "rsuite";
+import { notify } from "../components/Notification";
 
 const { Column, HeaderCell, Cell } = Table;
 
-const initialBuses = [
-  {
-    id: 1,
-    busName: "Express 101",
-    busNumber: "BUS-5678", // ← added
-    fare: 500,
-    seats: 40,
-    arrivalTime: "10:00 AM",
-    departureTime: "06:00 AM",
-    fromLocation: "City A",
-    toLocation: "City B",
-  },
-  {
-    id: 2,
-    busName: "Night Rider",
-    busNumber: "BUS-1123", // ← added
-    fare: 750,
-    seats: 32,
-    arrivalTime: "05:00 AM",
-    departureTime: "11:00 PM",
-    fromLocation: "City B",
-    toLocation: "City C",
-  },
-];
-
 const emptyBus = {
   busName: "",
-  busNumber: "", // ← added
+  busNumber: "",
   fare: null,
   seats: null,
   arrivalTime: "",
@@ -48,10 +26,60 @@ const emptyBus = {
 };
 
 const Busses = () => {
-  const [buses, setBuses] = useState(initialBuses);
+  const [buses, setBuses] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [open, setOpen] = useState(false);
   const [formValue, setFormValue] = useState(emptyBus);
-  const [editingId, setEditingId] = useState(null); // null = adding, number = editing
+  const [editingId, setEditingId] = useState(null); // null = add, id = edit
+
+  const [searchFrom, setSearchFrom] = useState("");
+  const [searchTo, setSearchTo] = useState("");
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const loadBuses = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`http://localhost:4000/api/buses`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeader(),
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        notify("error", data.message || "Failed to load buses");
+        return;
+      }
+
+      // Map backend fields (snake_case) to frontend camelCase
+      const normalized = data.map((b) => ({
+        id: b.id,
+        busName: b.bus_name,
+        busNumber: b.bus_number,
+        fare: b.fare,
+        seats: b.seats,
+        arrivalTime: b.arrival_time,
+        departureTime: b.departure_time,
+        fromLocation: b.from_location,
+        toLocation: b.to_location,
+      }));
+      setBuses(normalized);
+    } catch (err) {
+      console.error(err);
+      notify("error", "Server error while loading buses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBuses();
+  }, []);
 
   const handleAddOpen = () => {
     setEditingId(null);
@@ -63,7 +91,7 @@ const Busses = () => {
     setEditingId(rowData.id);
     setFormValue({
       busName: rowData.busName,
-      busNumber: rowData.busNumber, // ← added
+      busNumber: rowData.busNumber,
       fare: rowData.fare,
       seats: rowData.seats,
       arrivalTime: rowData.arrivalTime,
@@ -71,38 +99,150 @@ const Busses = () => {
       fromLocation: rowData.fromLocation,
       toLocation: rowData.toLocation,
     });
-
     setOpen(true);
   };
 
   const handleClose = () => setOpen(false);
 
-  const handleDelete = (id) => {
-    setBuses((prev) => prev.filter((bus) => bus.id !== id));
-  };
-
-  const handleSubmit = () => {
-    if (!formValue.busName) {
-      // you can add more proper validation if needed
-      alert("Please enter Bus Name");
+  const handleSubmit = async () => {
+    if (
+      !formValue.busName ||
+      !formValue.busNumber ||
+      !formValue.fare ||
+      !formValue.seats ||
+      !formValue.arrivalTime ||
+      !formValue.departureTime ||
+      !formValue.fromLocation ||
+      !formValue.toLocation
+    ) {
+      notify("error", "Please fill all fields");
       return;
     }
 
-    if (editingId === null) {
-      // Add new bus
-      const newId =
-        buses.length > 0 ? Math.max(...buses.map((b) => b.id)) + 1 : 1;
-      setBuses((prev) => [...prev, { id: newId, ...formValue }]);
-    } else {
-      // Edit existing bus
-      setBuses((prev) =>
-        prev.map((bus) =>
-          bus.id === editingId ? { ...bus, ...formValue } : bus
-        )
+    const payload = {
+      bus_number: formValue.busNumber,
+      bus_name: formValue.busName,
+      fare: Number(formValue.fare),
+      seats: Number(formValue.seats),
+      arrival_time: formValue.arrivalTime,
+      departure_time: formValue.departureTime,
+      from_location: formValue.fromLocation,
+      to_location: formValue.toLocation,
+    };
+
+    try {
+      const method = editingId === null ? "POST" : "PUT";
+      const url =
+        editingId === null
+          ? `http://localhost:4000/api/buses`
+          : `http://localhost:4000/api/buses/${editingId}`;
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify("error", data.message || "Failed to save bus");
+        return;
+      }
+
+      notify(
+        "success",
+        `Bus ${editingId === null ? "added" : "updated"} successfully`
       );
+      setOpen(false);
+      loadBuses();
+    } catch (err) {
+      console.error(err);
+      notify("error", "Server error while saving bus");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this bus?")) return;
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/buses/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeader(),
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        notify("error", data.message || "Failed to delete bus");
+        return;
+      }
+
+      notify("success", "Bus deleted successfully");
+      loadBuses();
+    } catch (err) {
+      console.error(err);
+      notify("error", "Server error while deleting bus");
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchFrom || !searchTo) {
+      notify("error", "Please enter both From and To locations");
+      return;
     }
 
-    setOpen(false);
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        from: searchFrom,
+        to: searchTo,
+      });
+
+      const res = await fetch(
+        `http://localhost:4000/api/buses/search?${params.toString()}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        notify("error", data.message || "Failed to search buses");
+        return;
+      }
+
+      const normalized = data.map((b) => ({
+        id: b.id,
+        busName: b.bus_name,
+        busNumber: b.bus_number,
+        fare: b.fare,
+        seats: b.seats,
+        arrivalTime: b.arrival_time,
+        departureTime: b.departure_time,
+        fromLocation: b.from_location,
+        toLocation: b.to_location,
+      }));
+      setBuses(normalized);
+    } catch (err) {
+      console.error(err);
+      notify("error", "Server error while searching buses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetSearch = () => {
+    setSearchFrom("");
+    setSearchTo("");
+    loadBuses();
   };
 
   return (
@@ -122,8 +262,36 @@ const Busses = () => {
         </Button>
       </div>
 
+      {/* Search Bar */}
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          marginBottom: 16,
+        }}
+      >
+        <InputGroup style={{ maxWidth: 220 }}>
+          <Input
+            placeholder="From"
+            value={searchFrom}
+            onChange={setSearchFrom}
+          />
+        </InputGroup>
+
+        <InputGroup style={{ maxWidth: 220 }}>
+          <Input placeholder="To" value={searchTo} onChange={setSearchTo} />
+        </InputGroup>
+
+        <Button appearance="primary" onClick={handleSearch}>
+          Search
+        </Button>
+        <Button appearance="subtle" onClick={handleResetSearch}>
+          Reset
+        </Button>
+      </div>
+
       {/* Table */}
-      <Table height={420} data={buses}>
+      <Table height={420} data={buses} loading={loading}>
         <Column width={60} align="center" fixed>
           <HeaderCell>Id</HeaderCell>
           <Cell dataKey="id" />
