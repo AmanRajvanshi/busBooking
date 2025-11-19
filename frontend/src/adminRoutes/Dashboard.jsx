@@ -95,7 +95,7 @@ const Dashboard = () => {
           <Table height={420} data={bookings} loading={loading} rowKey="id">
             <Column width={60} align="center" fixed>
               <HeaderCell>ID</HeaderCell>
-              <Cell dataKey="id" />
+              <Cell>{(rowData) => `#${rowData.id}`}</Cell>
             </Column>
 
             <Column width={180} resizable>

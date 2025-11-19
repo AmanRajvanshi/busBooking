@@ -50,7 +50,20 @@ router.get("/user/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
     const [rows] = await pool.query(
-      `SELECT b.*, u.name AS user_name, bs.bus_name
+      `SELECT 
+         b.id,
+         b.travel_date,
+         b.seats_booked,
+         b.status,
+         b.created_at,
+         u.phone        AS user_phone,
+         bs.bus_name,
+         bs.bus_number,
+         bs.from_location,
+         bs.to_location,
+         bs.departure_time,
+         bs.arrival_time,
+         bs.fare
        FROM bookings b
        JOIN users u ON b.user_id = u.id
        JOIN buses bs ON b.bus_id = bs.id

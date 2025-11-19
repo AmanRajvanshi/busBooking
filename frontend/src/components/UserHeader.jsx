@@ -29,10 +29,6 @@ const UserHeader = () => {
           Dashboard
         </Nav.Item>
 
-        <Nav.Item as={NavLink} to="/user/book" eventKey="/user/book">
-          Book a Bus
-        </Nav.Item>
-
         <Nav.Item as={NavLink} to="/user/bookings" eventKey="/user/bookings">
           My Bookings
         </Nav.Item>

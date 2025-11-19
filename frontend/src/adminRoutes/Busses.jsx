@@ -9,6 +9,7 @@ import {
   InputNumber,
   Modal,
   Table,
+  TimePicker,
 } from "rsuite";
 import { notify } from "../components/Notification";
 
@@ -39,6 +40,18 @@ const Busses = () => {
   const getAuthHeader = () => {
     const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const formatTime = (time) => {
+    if (!time) return "";
+    const [hourStr, minute] = time.split(":");
+    let hour = Number(hourStr);
+
+    const ampm = hour >= 12 ? "PM" : "AM";
+    if (hour === 0) hour = 12;
+    if (hour > 12) hour = hour - 12;
+
+    return `${hour}:${minute} ${ampm}`;
   };
 
   const loadBuses = async () => {
@@ -119,13 +132,21 @@ const Busses = () => {
       return;
     }
 
+    const toTimeString = (date) => {
+      if (!date) return "";
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    };
+
     const payload = {
       bus_number: formValue.busNumber,
       bus_name: formValue.busName,
       fare: Number(formValue.fare),
       seats: Number(formValue.seats),
-      arrival_time: formValue.arrivalTime,
-      departure_time: formValue.departureTime,
+      arrival_time: toTimeString(formValue.arrivalTime),
+      departure_time: toTimeString(formValue.departureTime),
       from_location: formValue.fromLocation,
       to_location: formValue.toLocation,
     };
@@ -317,14 +338,14 @@ const Busses = () => {
           <Cell dataKey="seats" />
         </Column>
 
-        <Column width={140} resizable>
-          <HeaderCell>Arrival Time</HeaderCell>
-          <Cell dataKey="arrivalTime" />
-        </Column>
-
         <Column width={150} resizable>
           <HeaderCell>Departure Time</HeaderCell>
           <Cell dataKey="departureTime" />
+        </Column>
+
+        <Column width={140} resizable>
+          <HeaderCell>Arrival Time</HeaderCell>
+          <Cell dataKey="arrivalTime" />
         </Column>
 
         <Column width={180} resizable>
@@ -391,14 +412,26 @@ const Busses = () => {
               <Form.Control name="seats" accepter={InputNumber} />
             </Form.Group>
 
-            <Form.Group controlId="arrivalTime">
-              <Form.ControlLabel>Arrival Time</Form.ControlLabel>
-              <Form.Control name="arrivalTime" accepter={Input} />
-            </Form.Group>
-
             <Form.Group controlId="departureTime">
               <Form.ControlLabel>Departure Time</Form.ControlLabel>
-              <Form.Control name="departureTime" accepter={Input} />
+              <Form.Control
+                name="departureTime"
+                accepter={TimePicker}
+                format="hh:mm aa"
+                showMeridiem
+                style={{ width: "100%" }}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="arrivalTime">
+              <Form.ControlLabel>Arrival Time</Form.ControlLabel>
+              <Form.Control
+                name="arrivalTime"
+                accepter={TimePicker}
+                format="hh:mm aa"
+                showMeridiem
+                style={{ width: "100%" }}
+              />
             </Form.Group>
 
             <Form.Group controlId="fromLocation">
