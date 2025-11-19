@@ -20,8 +20,9 @@ router.get("/dashboard", auth, isAdmin, async (req, res) => {
       SELECT COALESCE(SUM(b.fare * bk.seats_booked), 0) AS totalRevenue
       FROM bookings bk
       JOIN buses b ON bk.bus_id = b.id
-      WHERE bk.status = 'confirmed'
+      WHERE bk.status IN ('confirmed', 'completed')
     `);
+
 
     const totalRevenue = Number(revenueRow.totalRevenue) || 0;
 

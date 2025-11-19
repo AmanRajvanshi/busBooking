@@ -1,6 +1,6 @@
 // src/adminRoutes/Bookings.jsx
 import { useEffect, useState } from "react";
-import { Heading, SelectPicker, Table } from "rsuite";
+import { Col, Heading, SelectPicker, Table } from "rsuite";
 import { notify } from "../components/Notification";
 
 const { Column, HeaderCell, Cell } = Table;
@@ -120,14 +120,28 @@ const Bookings = () => {
         </Column>
 
         <Column width={200} resizable>
-          <HeaderCell>Travel Date & Time</HeaderCell>
+          <HeaderCell>Travel Date (IST)</HeaderCell>
           <Cell>
-            {(rowData) =>
-              `${rowData.travel_date ?? ""} ${
-                rowData.departure_time ? `- ${rowData.departure_time}` : ""
-              }`
-            }
+            {(rowData) => {
+              const utcDate = new Date(rowData.travel_date);
+
+              const istDate = utcDate.toLocaleDateString("en-IN", {
+                timeZone: "Asia/Kolkata",
+              });
+
+              return <span>{istDate}</span>;
+            }}
           </Cell>
+        </Column>
+
+        <Column width={140} resizable>
+          <HeaderCell>Departure Time</HeaderCell>
+          <Cell dataKey="departure_time" />
+        </Column>
+
+        <Column width={140} resizable>
+          <HeaderCell>Arrival Time</HeaderCell>
+          <Cell dataKey="arrival_time" />
         </Column>
 
         <Column width={160} resizable>

@@ -12,8 +12,6 @@ const router = express.Router();
 router.post("/login", async (req, res) => {
   const { identifier, password, role } = req.body; // identifier = email OR phone
 
-  console.log("Login attempt:", { identifier, role });
-
   if (!identifier || !password) {
     return res
       .status(400)

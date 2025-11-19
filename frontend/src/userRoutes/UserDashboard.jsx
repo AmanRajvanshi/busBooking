@@ -143,7 +143,7 @@ const UserDashboard = () => {
         body: JSON.stringify({
           busId: selectedBus.id,
           userId: user.id,
-          seats: bookingSeats,
+          seats_booked: bookingSeats,
           journeyDate: bookingDate?.toISOString().split("T")[0], // YYYY-MM-DD
         }),
       });

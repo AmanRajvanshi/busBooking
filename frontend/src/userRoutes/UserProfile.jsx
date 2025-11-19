@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Heading, Panel, Form, Input, Button } from "rsuite";
-import Notification from "../components/Notification";
+import { notify } from "../components/Notification";
 
 const UserProfile = () => {
   const [formValue, setFormValue] = useState({
@@ -8,9 +8,6 @@ const UserProfile = () => {
     email: "",
     contact: "",
   });
-
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("success");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -41,11 +38,8 @@ const UserProfile = () => {
         });
       } catch (err) {
         console.error(err);
-        setMessageType("error");
-        setMessage("Failed to load profile");
       } finally {
         setLoading(false);
-        setTimeout(() => setMessage(""), 3000);
       }
     };
 
@@ -82,12 +76,10 @@ const UserProfile = () => {
         contact: data.phone || "",
       });
 
-      setMessageType("success");
-      setMessage("Profile updated successfully");
+      notify("success", data.message || "Profile updated successfully");
     } catch (err) {
       console.error(err);
-      setMessageType("error");
-      setMessage("Failed to update profile");
+      notify("error", err.message || "Error updating profile");
     } finally {
       setSaving(false);
       setTimeout(() => setMessage(""), 3000);
@@ -132,8 +124,6 @@ const UserProfile = () => {
           </Button>
         </Form>
       </Panel>
-
-      <Notification show={!!message} type={messageType} message={message} />
     </>
   );
 };

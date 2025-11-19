@@ -283,34 +283,6 @@ const Busses = () => {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          marginBottom: 16,
-        }}
-      >
-        <InputGroup style={{ maxWidth: 220 }}>
-          <Input
-            placeholder="From"
-            value={searchFrom}
-            onChange={setSearchFrom}
-          />
-        </InputGroup>
-
-        <InputGroup style={{ maxWidth: 220 }}>
-          <Input placeholder="To" value={searchTo} onChange={setSearchTo} />
-        </InputGroup>
-
-        <Button appearance="primary" onClick={handleSearch}>
-          Search
-        </Button>
-        <Button appearance="subtle" onClick={handleResetSearch}>
-          Reset
-        </Button>
-      </div>
-
       {/* Table */}
       <Table height={420} data={buses} loading={loading}>
         <Column width={60} align="center" fixed>
@@ -403,13 +375,18 @@ const Busses = () => {
             </Form.Group>
 
             <Form.Group controlId="fare">
-              <Form.ControlLabel>Fare</Form.ControlLabel>
+              <Form.ControlLabel>Fare (Per Seat)</Form.ControlLabel>
               <Form.Control name="fare" accepter={InputNumber} />
             </Form.Group>
 
             <Form.Group controlId="seats">
               <Form.ControlLabel>No. of Seats</Form.ControlLabel>
               <Form.Control name="seats" accepter={InputNumber} />
+            </Form.Group>
+
+            <Form.Group controlId="fromLocation">
+              <Form.ControlLabel>From Location</Form.ControlLabel>
+              <Form.Control name="fromLocation" accepter={Input} />
             </Form.Group>
 
             <Form.Group controlId="departureTime">
@@ -423,6 +400,11 @@ const Busses = () => {
               />
             </Form.Group>
 
+            <Form.Group controlId="toLocation">
+              <Form.ControlLabel>To Location</Form.ControlLabel>
+              <Form.Control name="toLocation" accepter={Input} />
+            </Form.Group>
+
             <Form.Group controlId="arrivalTime">
               <Form.ControlLabel>Arrival Time</Form.ControlLabel>
               <Form.Control
@@ -432,16 +414,6 @@ const Busses = () => {
                 showMeridiem
                 style={{ width: "100%" }}
               />
-            </Form.Group>
-
-            <Form.Group controlId="fromLocation">
-              <Form.ControlLabel>From Location</Form.ControlLabel>
-              <Form.Control name="fromLocation" accepter={Input} />
-            </Form.Group>
-
-            <Form.Group controlId="toLocation">
-              <Form.ControlLabel>To Location</Form.ControlLabel>
-              <Form.Control name="toLocation" accepter={Input} />
             </Form.Group>
           </Form>
         </Modal.Body>

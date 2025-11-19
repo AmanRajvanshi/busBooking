@@ -115,18 +115,8 @@ const UserBookings = () => {
           <Cell dataKey="departure_time" />
         </Column>
 
-        <Column width={150}>
-          <HeaderCell>Contact</HeaderCell>
-          {/* assuming user phone comes as `phone` or `user_phone` */}
-          <Cell>
-            {(rowData) =>
-              maskContact(rowData.user_phone || rowData.phone || "")
-            }
-          </Cell>
-        </Column>
-
         <Column width={80}>
-          <HeaderCell>Seats</HeaderCell>
+          <HeaderCell>No. of Seats</HeaderCell>
           {/* you called it seats_booked in DB */}
           <Cell dataKey="seats_booked" />
         </Column>

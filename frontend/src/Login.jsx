@@ -1,8 +1,10 @@
 // src/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Button, Form, Input, Panel } from "rsuite";
+import { Button, Form, Input, InputGroup, Panel } from "rsuite";
 import { notify } from "./components/Notification";
+import EyeCloseIcon from "@rsuite/icons/EyeClose";
+import VisibleIcon from "@rsuite/icons/Visible";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,6 +13,8 @@ const Login = () => {
     identifier: "", // email or phone
     password: "",
   });
+  const [visible, setVisible] = useState(false);
+  const handleChange = () => setVisible(!visible);
 
   const handleLogin = async () => {
     if (!formValue.identifier || !formValue.password) {
@@ -126,7 +130,17 @@ const Login = () => {
 
           <Form.Group>
             <Form.ControlLabel>Password</Form.ControlLabel>
-            <Form.Control name="password" accepter={Input} type="password" />
+
+            <InputGroup inside>
+              <Form.Control
+                name="password"
+                accepter={Input}
+                type={visible ? "text" : "password"}
+              />
+              <InputGroup.Button onClick={handleChange}>
+                {visible ? <VisibleIcon /> : <EyeCloseIcon />}
+              </InputGroup.Button>
+            </InputGroup>
           </Form.Group>
 
           <Button
